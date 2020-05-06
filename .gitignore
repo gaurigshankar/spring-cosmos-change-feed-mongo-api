@@ -1,2 +1,5 @@
 .idea/
 target/
+..bfg-report/
+src/main/resources/application.properties
+src/main/resources/application_wmt.properties
