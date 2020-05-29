@@ -19,7 +19,7 @@ ChangeFeed/ChangeStream messages on Employee Collection and inserts/updates the 
 2) Ensure MongoDB APi 3.6 version is used / enabled in Azure Portal
 3) Ensure MongoDB Aggregation Pipeline is enabled in Azure Portal
 4) Create New DB / Use Existing DB
-5) Create two Collections named Employee and DuplicateEmployee
+5) Create three Collections named Employee,  DuplicateEmployee and EmployeeLease
 6) Rename [src/main/resources/sample_application.properties](./src/main/resources/sample_application.properties) to `application.properties`
 7) Modify `src/main/resources/application.properties` to update MONGO URI and DB Name specific to your azure account
 
@@ -65,3 +65,34 @@ Once Server is running, base path of the endpoints are http://localhost:8080/cos
 | http://localhost:8080/cosmosdemo/test/statusChangeFeedEmployee | GET | Gets the status of Employee Change Feed Subscription that informs, if the subscription is active |
 | http://localhost:8080/cosmosdemo/test/terminateChangeFeedEmployee | GET | Terminates the Employee Change Feed Subscription |
 | http://localhost:8080/cosmosdemo/test/insertEmployee |  POST  <pre lang="json">{<br> "_id": 4, <br> "name": "Gauri", <br> "department": "IT", <br>  "designation": "Engg" <br> } </pre>  | Insert a document into Employee Collection |
+
+
+### JVM variables
+| variable | comments |
+| - | - |
+| -Dserver.port=8085 | to override tomcat port |
+| -DhostName=host411 | to override host name |
+
+### High Availability Settings
+
+1) EmployeeLease collection used as a single document collection.
+2) Active and Passive Workers for Change Feed use this Collection to switch role
+3) Active Worker is the host that will actively listen to the Change feed and process the change. 
+4) Active Worker periodically updates the EmployeeLease collection to inform passive workers that the 
+    active worker is still healthy and actively processing the change by updating timestamp.
+5) Active worker also periodically updates EmployeeLease Collection with RefreshToken until which it has processed the 
+Change feed for source collection (ie) Employee    
+6) Passive worker Listens to Change Feed of EmployeeLease Collection and checks the timestamp updated by active worker.
+   If the last updated timestamp by active worker exceeds threshold, one of the passive worker will try to become active worker.
+
+`Sample EmployeeLease Document`
+```
+{
+        "ownerHealthCheckRefreshTime": NumberLong("1590714388686"),
+        "hostName": "host311",
+        "_class": "com.gauri.cosmosdemo.db.models.EmployeeLease",
+        "resumeToken": {
+            "_data": BinData(0, "W3sidG9rZW4iOiJcIjg1XCIiLCJyYW5nZSI6eyJtaW4iOiIiLCJtYXgiOiJGRiJ9fV0=")
+        }
+    }
+```
