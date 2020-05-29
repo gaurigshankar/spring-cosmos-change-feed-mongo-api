@@ -2,8 +2,9 @@ package com.gauri.cosmosdemo.service;
 
 import com.gauri.cosmosdemo.db.changefeed.EmployeeChangeFeedListener;
 import com.gauri.cosmosdemo.db.core.CosmosDAL;
-import com.gauri.cosmosdemo.db.models.DuplicateEmployee;
+import com.gauri.cosmosdemo.db.lease.EmployeeLeaseLogic;
 import com.gauri.cosmosdemo.db.models.Employee;
+import com.gauri.cosmosdemo.db.models.EmployeeLease;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class TestServiceController {
 
     @Autowired
     EmployeeChangeFeedListener employeeChangeFeedListener;
+
+    @Autowired
+    EmployeeLeaseLogic employeeLeaseLogic;
 
     @Autowired
     CosmosDAL cosmosDAL;
@@ -50,6 +54,12 @@ public class TestServiceController {
     {
         List<Employee> employees = cosmosDAL.getAllEmployees();
         return new ResponseEntity<List<Employee>>(employees, HttpStatus.OK);
+    }
+
+    @GetMapping("/leasedEmployee")
+    public ResponseEntity<EmployeeLease> getLeaseEmployee() {
+        EmployeeLease employeeLease = cosmosDAL.findLeasedEmployee("consumer1");
+        return new ResponseEntity<EmployeeLease>(employeeLease, HttpStatus.OK);
     }
 
 }
